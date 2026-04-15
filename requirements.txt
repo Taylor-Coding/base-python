@@ -1,0 +1,45 @@
+# Web Framework
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+
+# Database
+sqlalchemy==2.0.36
+alembic==1.14.0
+psycopg2-binary==2.9.10
+
+# Pydantic & Settings
+pydantic==2.10.3
+pydantic-settings==2.6.1
+email-validator==2.2.0
+
+# Authentication
+python-jose[cryptography]==3.3.0
+bcrypt==4.2.1
+python-multipart==0.0.18
+
+# OAuth2
+httpx==0.28.1
+
+# Redis
+redis==5.2.1
+
+# AWS S3
+boto3==1.35.82
+
+# Celery
+celery==5.4.0
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.24.0
+httpx==0.28.1
+
+# Utils
+python-dotenv==1.0.1
+
+# LangChain
+langchain-core
+langchain-ollama
+
+# Formatting
+black==24.10.0

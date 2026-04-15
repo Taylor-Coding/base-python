@@ -1,0 +1,43 @@
+# Git
+.git/
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 가상 환경
+.venv/
+venv/
+env/
+
+# 환경변수 (절대 포함 금지)
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# 테스트
+tests/
+
+# 문서
+*.md
+!alembic.ini
+
+# Claude
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+
+# macOS
+.DS_Store
+
+# Docker
+Dockerfile
+.dockerignore

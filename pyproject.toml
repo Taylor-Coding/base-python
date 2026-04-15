@@ -1,0 +1,19 @@
+[tool.black]
+line-length = 100
+target-version = ['py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    # 가상 환경 및 캐시 제외
+    \.eggs
+  | \.git
+  | \.venv
+  | _build
+  | build
+  | dist
+)/
+'''
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

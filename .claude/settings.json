@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pytest*)",
+      "Bash(uvicorn*)",
+      "Bash(alembic*)",
+      "Bash(celery*)",
+      "Bash(pip install*)",
+      "Bash(pip-compile*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(git push --force*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/dstrict-taylor/code/dwork-studio-api && python -m py_compile $(git diff --name-only --cached -- '*.py' | head -5) 2>&1 || true"
+          }
+        ]
+      }
+    ]
+  }
+}
