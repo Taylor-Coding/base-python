@@ -26,11 +26,14 @@ class AppExceptionCode(str, Enum):
     MISSING_TOKEN = "MISSING_TOKEN"
     UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS"
 
+    FORBIDDEN_ROLE = "FORBIDDEN_ROLE"
+
     # User
     NOT_FOUND_USER = "NOT_FOUND_USER"
     DUPLICATE_EMAIL = "DUPLICATE_EMAIL"
     INVALID_CREDENTIALS = "INVALID_CREDENTIALS"
     INACTIVE_USER = "INACTIVE_USER"
+    ACCOUNT_LOCKED = "ACCOUNT_LOCKED"
 
 
     @property
@@ -47,10 +50,12 @@ _STATUS_MAP: dict[AppExceptionCode, int] = {
     AppExceptionCode.EXPIRED_TOKEN: status.HTTP_401_UNAUTHORIZED,
     AppExceptionCode.MISSING_TOKEN: status.HTTP_401_UNAUTHORIZED,
     AppExceptionCode.UNAUTHORIZED_ACCESS: status.HTTP_401_UNAUTHORIZED,
+    AppExceptionCode.FORBIDDEN_ROLE: status.HTTP_403_FORBIDDEN,
     AppExceptionCode.NOT_FOUND_USER: status.HTTP_404_NOT_FOUND,
     AppExceptionCode.DUPLICATE_EMAIL: status.HTTP_409_CONFLICT,
     AppExceptionCode.INVALID_CREDENTIALS: status.HTTP_401_UNAUTHORIZED,
     AppExceptionCode.INACTIVE_USER: status.HTTP_403_FORBIDDEN,
+    AppExceptionCode.ACCOUNT_LOCKED: status.HTTP_403_FORBIDDEN,
 }
 
 _MESSAGE_MAP: dict[AppExceptionCode, str] = {
@@ -58,10 +63,12 @@ _MESSAGE_MAP: dict[AppExceptionCode, str] = {
     AppExceptionCode.EXPIRED_TOKEN: "만료된 토큰입니다.",
     AppExceptionCode.MISSING_TOKEN: "토큰이 누락되었습니다.",
     AppExceptionCode.UNAUTHORIZED_ACCESS: "인증되지 않은 접근입니다.",
+    AppExceptionCode.FORBIDDEN_ROLE: "접근 권한이 없습니다.",
     AppExceptionCode.NOT_FOUND_USER: "사용자를 찾을 수 없습니다.",
     AppExceptionCode.DUPLICATE_EMAIL: "이미 사용 중인 이메일입니다.",
     AppExceptionCode.INVALID_CREDENTIALS: "이메일 또는 비밀번호가 올바르지 않습니다.",
     AppExceptionCode.INACTIVE_USER: "비활성화된 계정입니다.",
+    AppExceptionCode.ACCOUNT_LOCKED: "계정이 잠겼습니다. 잠시 후 다시 시도해주세요.",
 }
 
 
@@ -71,11 +78,12 @@ _MESSAGE_MAP: dict[AppExceptionCode, str] = {
 
 
 class AppException(Exception):
-    def __init__(self, code: AppExceptionCode) -> None:
-        super().__init__(code.message)
+    def __init__(self, code: AppExceptionCode, message: str | None = None) -> None:
+        _message = message or code.message
+        super().__init__(_message)
         self.code = code
         self.http_status = code.http_status
-        self.message = code.message
+        self.message = _message
 
 
 # --------------------------------------------------------------------------- #

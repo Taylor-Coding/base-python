@@ -3,14 +3,17 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from app.domains.user.enums import UserRole
+
 
 class UserResponse(BaseModel):
     id: uuid.UUID
     email: str
-    full_name: str | None
+    name: str | None
+    role: UserRole
+    organization_id: uuid.UUID | None
     is_active: bool
-    is_superuser: bool
-    is_first_login: bool
+    last_login_at: datetime | None
     created_at: datetime
     updated_at: datetime
 

@@ -15,23 +15,29 @@ class UserService:
     def register(self, data: UserCreate) -> User:
         if self.repo.email_exists(data.email):
             raise AppException(AppExceptionCode.DUPLICATE_EMAIL)
+
         user = User(
             email=data.email,
-            hashed_password=hash_password(data.password),
-            full_name=data.full_name,
+            password=hash_password(data.password),
+            name=data.name,
         )
+
         return self.repo.create(user)
 
     def get_user(self, user_id: uuid.UUID) -> User:
         user = self.repo.get_by_id(user_id)
+
         if not user:
             raise AppException(AppExceptionCode.NOT_FOUND_USER)
+
         return user
 
     def update_user(self, user_id: uuid.UUID, data: UserUpdate) -> User:
         user = self.get_user(user_id)
+
         for field, value in data.model_dump(exclude_none=True).items():
             setattr(user, field, value)
+
         return self.repo.update(user)
 
     def delete_user(self, user_id: uuid.UUID) -> None:

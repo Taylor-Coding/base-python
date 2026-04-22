@@ -18,6 +18,7 @@
 - ORM 쿼리는 `session.query()` 대신 `select()` 구문(2.0 스타일) 권장
 - `relationship` lazy loading 주의 — 필요 시 `joinedload` 명시
 - 모든 모델은 `BaseModel`을 상속한다
+- **물리적 FK 제약 금지** — 모델에서 `ForeignKey()`로 ORM 연관관계는 선언하되, 마이그레이션에서 `ForeignKeyConstraint` / `op.create_foreign_key`는 사용하지 않는다. DB 수준의 참조 무결성은 애플리케이션 레이어에서 보장한다.
 
 ## Pydantic
 

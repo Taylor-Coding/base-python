@@ -36,3 +36,20 @@ def cache_delete(key: str) -> None:
 def cache_exists(key: str) -> bool:
     client = get_redis_client()
     return bool(client.exists(key))
+
+
+def redis_incr(key: str) -> int:
+    return get_redis_client().incr(key)
+
+
+def redis_expire(key: str, seconds: int) -> None:
+    get_redis_client().expire(key, seconds)
+
+
+def redis_ttl(key: str) -> int:
+    return get_redis_client().ttl(key)
+
+
+def redis_get_int(key: str) -> int | None:
+    val = get_redis_client().get(key)
+    return int(val) if val is not None else None

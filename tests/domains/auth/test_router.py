@@ -1,10 +1,22 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from app.integrations.redis import cache_delete
+
 REGISTER_URL = "/api/auth/register"
 LOGIN_URL = "/api/auth/login"
 REFRESH_URL = "/api/auth/refresh"
 LOGOUT_URL = "/api/auth/logout"
+
+LOCKOUT_EMAIL = "lockout@example.com"
+LOCKOUT_KEY = f"login_lock:{LOCKOUT_EMAIL}"
+
+
+@pytest.fixture
+def lockout_user(client: TestClient):
+    client.post(REGISTER_URL, json={"email": LOCKOUT_EMAIL, "password": "correct123"})
+    yield {"email": LOCKOUT_EMAIL, "password": "correct123"}
+    cache_delete(LOCKOUT_KEY)
 
 
 @pytest.fixture
@@ -96,3 +108,40 @@ def test_users_endpoint_blocked_without_token(client: TestClient):
     response = client.get("/api/users/me")
     assert response.status_code == 401
     assert response.json()["error_code"] == "MISSING_TOKEN"
+
+
+def test_login_failure_under_limit_returns_invalid_credentials(client: TestClient, lockout_user):
+    for _ in range(4):
+        res = client.post(LOGIN_URL, json={"email": lockout_user["email"], "password": "wrong"})
+        assert res.status_code == 401
+        assert res.json()["error_code"] == "INVALID_CREDENTIALS"
+
+
+def test_login_locked_after_five_failures(client: TestClient, lockout_user):
+    for _ in range(4):
+        client.post(LOGIN_URL, json={"email": lockout_user["email"], "password": "wrong"})
+
+    res = client.post(LOGIN_URL, json={"email": lockout_user["email"], "password": "wrong"})
+    assert res.status_code == 403
+    assert res.json()["error_code"] == "ACCOUNT_LOCKED"
+    assert "5분" in res.json()["message"]
+
+
+def test_locked_account_blocks_correct_password(client: TestClient, lockout_user):
+    for _ in range(5):
+        client.post(LOGIN_URL, json={"email": lockout_user["email"], "password": "wrong"})
+
+    res = client.post(LOGIN_URL, json={"email": lockout_user["email"], "password": lockout_user["password"]})
+    assert res.status_code == 403
+    assert res.json()["error_code"] == "ACCOUNT_LOCKED"
+
+
+def test_login_attempts_reset_on_success(client: TestClient, lockout_user):
+    for _ in range(3):
+        client.post(LOGIN_URL, json={"email": lockout_user["email"], "password": "wrong"})
+
+    client.post(LOGIN_URL, json={"email": lockout_user["email"], "password": lockout_user["password"]})
+
+    res = client.post(LOGIN_URL, json={"email": lockout_user["email"], "password": "wrong"})
+    assert res.status_code == 401
+    assert res.json()["error_code"] == "INVALID_CREDENTIALS"

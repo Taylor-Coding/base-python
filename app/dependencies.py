@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import AppException, AppExceptionCode
 from app.core.security import decode_access_token
 from app.database import SessionLocal
+from app.domains.user.enums import UserRole
+from app.domains.user.models import User
 from app.domains.user.repository import UserRepository
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -44,3 +46,12 @@ def get_current_user(
         raise AppException(AppExceptionCode.NOT_FOUND_USER)
 
     return user
+
+
+def require_roles(*roles: UserRole):
+    def dependency(current_user: User = Depends(get_current_user)) -> User:
+        if current_user.role not in roles:
+            raise AppException(AppExceptionCode.FORBIDDEN_ROLE)
+        return current_user
+
+    return dependency

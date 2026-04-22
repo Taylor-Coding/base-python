@@ -3,7 +3,8 @@ import uuid
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.dependencies import get_current_user, get_db
+from app.dependencies import get_current_user, get_db, require_roles
+from app.domains.user.enums import UserRole
 from app.domains.user.models import User
 from app.domains.user.repository import UserRepository
 from app.common.pagination import PageResult
@@ -21,7 +22,7 @@ def get_service(db: Session = Depends(get_db)) -> UserService:
     return UserService(UserRepository(db))
 
 
-@router.get("", response_model=PageResult[UserResponse])
+@router.get("", response_model=PageResult[UserResponse], dependencies=[Depends(require_roles(UserRole.MASTER, UserRole.ADMIN))])
 def search_users(params: UserSearchParams = Depends(), service: UserService = Depends(get_service)):
     return service.search_users(params)
 
