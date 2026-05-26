@@ -1,4 +1,4 @@
-"""create users and organizations tables
+"""create users and companies tables
 
 Revision ID: 829b7e4b7e9c
 Revises:
@@ -18,9 +18,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # 1. organizations 테이블 생성
+    # 1. companies 테이블 생성
     op.create_table(
-        "organizations",
+        "companies",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("parent_id", sa.Uuid(), nullable=True),
         sa.Column("name", sa.String(length=255), nullable=False),
@@ -47,9 +47,10 @@ def upgrade() -> None:
         sa.Column("email", sa.String(length=255), nullable=False),
         sa.Column("password", sa.String(length=255), nullable=True),
         sa.Column("name", sa.String(length=255), nullable=True),
-        sa.Column("organization_id", sa.Uuid(), nullable=True),
-        sa.Column("role", sa.String(length=50), server_default="user", nullable=False),
+        sa.Column("company_id", sa.Uuid(), nullable=True),
+        sa.Column("role", sa.String(length=50), server_default="USER", nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.true()),
+        sa.Column("status", sa.String(length=50), server_default="ACTIVE", nullable=False),
         sa.Column("last_login_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
             "created_at",
@@ -66,18 +67,16 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_users_email"), "users", ["email"], unique=True)
-    op.create_index(op.f("ix_users_organization_id"), "users", ["organization_id"], unique=False)
+    op.create_index(op.f("ix_users_company_id"), "users", ["company_id"], unique=False)
 
-    op.create_index(
-        "idx_organizations_parent_id", "organizations", ["parent_id"], unique=False
-    )
-    op.create_index("idx_organizations_name", "organizations", ["name"], unique=False)
+    op.create_index("idx_companies_parent_id", "companies", ["parent_id"], unique=False)
+    op.create_index("idx_companies_name", "companies", ["name"], unique=False)
 
 
 def downgrade() -> None:
-    op.drop_index("idx_organizations_name", table_name="organizations")
-    op.drop_index("idx_organizations_parent_id", table_name="organizations")
-    op.drop_index(op.f("ix_users_organization_id"), table_name="users")
+    op.drop_index("idx_companies_name", table_name="companies")
+    op.drop_index("idx_companies_parent_id", table_name="companies")
+    op.drop_index(op.f("ix_users_company_id"), table_name="users")
     op.drop_index(op.f("ix_users_email"), table_name="users")
     op.drop_table("users")
-    op.drop_table("organizations")
+    op.drop_table("companies")

@@ -4,8 +4,9 @@ from datetime import datetime
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.database import Base
-from app.domains.user.enums import UserRole
+from app.core.constants.enums import ActiveStatus, UserRole
+from app.core.database.session import Base
+from app.domains.user.models.company import Company  # noqa: F401
 
 
 class User(Base):
@@ -15,15 +16,15 @@ class User(Base):
 
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
 
-    password: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    password: Mapped[str | None] = mapped_column(String(255))
 
-    name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    name: Mapped[str | None] = mapped_column(String(255))
 
-    organization_id: Mapped[uuid.UUID | None] = mapped_column(
+    company_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid,
-        ForeignKey("organizations.id", ondelete="SET NULL"),
-        nullable=True,
+        ForeignKey("companies.id", ondelete="SET NULL"),
         index=True,
+        nullable=True,
     )
 
     role: Mapped[UserRole] = mapped_column(String(50), nullable=False, default=UserRole.USER)
@@ -32,7 +33,10 @@ class User(Base):
 
     last_login_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
-        nullable=True,
+    )
+
+    status: Mapped[ActiveStatus] = mapped_column(
+        String(50), nullable=False, default=ActiveStatus.ACTIVE
     )
 
     created_at: Mapped[datetime] = mapped_column(
@@ -46,3 +50,11 @@ class User(Base):
         onupdate=func.now(),
         nullable=False,
     )
+
+    @property
+    def full_name(self) -> str | None:
+        return self.name
+
+    @property
+    def is_first_login(self) -> bool:
+        return self.last_login_at is None

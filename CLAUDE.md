@@ -44,7 +44,7 @@ alembic revision --autogenerate -m "description"
 alembic upgrade head
 
 # Celery 워커 실행
-celery -A app.integrations.celery_app worker --loglevel=info
+celery -A app.core.worker.celery_app worker --loglevel=info
 ```
 
 ## Coding Rules
@@ -52,9 +52,44 @@ celery -A app.integrations.celery_app worker --loglevel=info
 - 모든 비즈니스 로직은 `service.py`에, DB 쿼리는 `repository.py`에만 작성한다
 - `router.py`는 DI 조립과 HTTP 변환만 담당한다 (로직 금지)
 - 새 도메인 추가 시 `migrations/env.py`에 모델 import를 추가해야 Alembic이 감지한다
+- 모든 패키지에는 `__init__.py`를 두지 않고, 필요한 객체는 실제 모듈 경로에서 직접 import한다
+- `app/common` 패키지는 사용하지 않는다. 공용 기반 코드는 맥락에 맞게 `app/core` 하위 모듈에 둔다
 - 테스트는 라우터(엔드포인트) 단위로만 작성한다 — service/repository 단위 테스트는 작성하지 않는다
 - 테스트는 SQLite 인메모리 DB를 사용하며 트랜잭션 롤백으로 격리한다
 - `BaseModel`, `BaseRepository`를 반드시 상속한다 (`id`, `created_at`, `updated_at` 자동 포함)
+
+## Foreign Key 정책
+
+**ORM 모델**: `ForeignKey()`로 연관관계를 선언한다. SQLAlchemy가 관계를 인식할 수 있도록 유지하되, `ondelete` 등 cascade 옵션은 붙이지 않는다.
+
+```python
+# models.py — 허용
+organization_id: Mapped[uuid.UUID] = mapped_column(
+    Uuid, ForeignKey("organizations.id"), nullable=False, index=True
+)
+```
+
+**마이그레이션**: DB 수준의 FK 제약은 생성하지 않는다. `op.create_foreign_key` / `ForeignKeyConstraint` 사용 금지. autogenerate로 생성된 마이그레이션에 이 구문이 포함되면 반드시 제거한다.
+
+```python
+# migrations/versions/*.py — 금지
+op.create_foreign_key(...)        # 제거
+op.drop_constraint(..., type_='foreignkey')  # 제거
+```
+
+**인덱스**: FK 컬럼에는 `index=True`를 지정해 조회 성능을 확보한다. 참조 무결성은 애플리케이션 레이어(service)에서 보장한다.
+
+**유효성 체크**: DB 수준의 FK 제약이 없으므로, `service.py`에서 FK 컬럼에 해당하는 참조 엔티티가 실제로 존재하는지 반드시 확인한다. 존재하지 않으면 적절한 `NOT_FOUND_*` 예외를 발생시킨다.
+
+```python
+# service.py — FK 유효성 체크 예시
+def create_project(self, data: ProjectCreate) -> Project:
+    if not self.org_repo.get_by_id(data.organization_id):
+        raise AppException(AppExceptionCode.NOT_FOUND_ORGANIZATION)
+    if not self.user_repo.get_by_id(data.user_id):
+        raise AppException(AppExceptionCode.NOT_FOUND_USER)
+    ...
+```
 
 ## Adding a New Domain
 

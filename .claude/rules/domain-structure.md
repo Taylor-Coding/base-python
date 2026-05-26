@@ -10,7 +10,7 @@
 4. `repository.py` — `BaseRepository` 상속, 도메인 특화 쿼리만 추가
 5. `service.py` — 비즈니스 로직, `HTTPException` 발생 담당
 6. `router.py` — DI 조립 + 엔드포인트만, 로직 없음
-7. `app/domains/<name>/__init__.py` 생성
+7. `app/domains/<name>` 생성
 8. `migrations/env.py`에 `import app.domains.<name>.models` 추가
 9. `app/main.py`에 `app.include_router(...)` 추가
 10. `tests/domains/<name>/` 아래 테스트 3종 작성

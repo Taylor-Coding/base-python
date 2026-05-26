@@ -1,16 +1,16 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import AliasChoices, BaseModel, EmailStr, Field
 
-from app.common.pagination import PaginationParams
+from app.core.api.pagination import PaginationParams
 
 
 class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
-    name: str | None = None
+    name: str | None = Field(default=None, validation_alias=AliasChoices("name", "full_name"))
 
 
 class UserUpdate(BaseModel):
-    name: str | None = None
+    name: str | None = Field(default=None, validation_alias=AliasChoices("name", "full_name"))
     is_active: bool | None = None
 
 
